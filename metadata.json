@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Remix: Remix: Finvest",
+  "description": "A high-end, immersive personal portfolio for creative developers and designers, featuring smooth animations and a modern aesthetic.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "entities": {
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial transaction (income or expense)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "amount": { "type": "number" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "time": { "type": "string" },
+        "paymentMethod": { "type": "string" }
+      },
+      "required": ["type", "amount", "category", "date"]
+    },
+    "UserFinance": {
+      "title": "User Finance Settings",
+      "description": "User specific financial goals and simulation state",
+      "type": "object",
+      "properties": {
+        "incomeGoal": { "type": "number" },
+        "expenseLimit": { "type": "number" },
+        "simBalances": { "type": "object" },
+        "simInvestments": { "type": "object" },
+        "simMonth": { "type": "number" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserFinance",
+      "description": "User financial settings and simulation state"
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "User transactions"
+    }
+  }
+}
