@@ -7,13 +7,20 @@ import { loginWithGoogle } from "../lib/firebase";
 export default function Login() {
   const navigate = useNavigate();
   const setAppMode = useFinanceStore(state => state.setAppMode);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const handleGoogleLogin = async () => {
+    if (isLoggingIn) return;
+    setIsLoggingIn(true);
     try {
       await loginWithGoogle();
       navigate("/app");
-    } catch (error) {
-      console.error("Login Error:", error);
+    } catch (error: any) {
+      if (error?.code !== 'auth/cancelled-popup-request' && error?.code !== 'auth/popup-closed-by-user') {
+        console.error("Login Error:", error);
+      }
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -53,12 +60,13 @@ export default function Login() {
         <div className="bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-[32px] p-8 shadow-2xl space-y-4">
           <button 
             onClick={handleGoogleLogin}
-            className="w-full bg-white text-slate-950 hover:bg-slate-100 rounded-2xl py-4 font-bold transition-all flex items-center justify-center gap-3 group"
+            disabled={isLoggingIn}
+            className={`w-full bg-white text-slate-950 hover:bg-slate-100 rounded-2xl py-4 font-bold transition-all flex items-center justify-center gap-3 group ${isLoggingIn ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             <div className="bg-slate-100 p-1 rounded-lg group-hover:bg-white transition-colors">
-              <Chrome className="h-5 w-5" />
+              <Chrome className={`h-5 w-5 ${isLoggingIn ? 'animate-pulse' : ''}`} />
             </div>
-            Đăng nhập với Google
+            {isLoggingIn ? 'Đang đăng nhập...' : 'Đăng nhập với Google'}
           </button>
           
           <div className="flex items-center gap-4 py-2">
