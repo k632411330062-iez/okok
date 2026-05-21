@@ -8,16 +8,23 @@ export default function Login() {
   const navigate = useNavigate();
   const setAppMode = useFinanceStore(state => state.setAppMode);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleGoogleLogin = async () => {
     if (isLoggingIn) return;
     setIsLoggingIn(true);
+    setErrorMsg("");
     try {
       await loginWithGoogle();
       navigate("/app");
     } catch (error: any) {
       if (error?.code !== 'auth/cancelled-popup-request' && error?.code !== 'auth/popup-closed-by-user') {
         console.error("Login Error:", error);
+        if (error?.code === 'auth/unauthorized-domain') {
+          setErrorMsg("Domain này chưa được cấp phép. Vui lòng thêm domain vào Authorized Domains trong Firebase Console.");
+        } else {
+          setErrorMsg("Đăng nhập thất bại. Hoặc bạn đã đóng popup. Vui lòng thử lại.");
+        }
       }
     } finally {
       setIsLoggingIn(false);
@@ -58,6 +65,11 @@ export default function Login() {
         </div>
 
         <div className="bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-[32px] p-8 shadow-2xl space-y-4">
+          {errorMsg && (
+            <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm p-3 rounded-xl text-center">
+              {errorMsg}
+            </div>
+          )}
           <button 
             onClick={handleGoogleLogin}
             disabled={isLoggingIn}

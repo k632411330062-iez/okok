@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -17,16 +16,27 @@ app.use((req, res, next) => {
   next();
 });
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
+// Lazy initialization of genai client
+let aiClient: GoogleGenAI | null = null;
+const getAiClient = () => {
+  if (!aiClient) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (apiKey && apiKey !== "MY_GEMINI_API_KEY") {
+      aiClient = new GoogleGenAI({
+        apiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } }
+      });
     }
   }
-});
+  return aiClient;
+};
 
 const generateWithRetry = async (params: any, maxRetries = 4) => {
+  const ai = getAiClient();
+  if (!ai) {
+    throw new Error("GEMINI_API_KEY is missing or not configured.");
+  }
+  
   // Priority order for models to try
   const models = ["gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
   let lastError;
@@ -333,9 +343,10 @@ app.get("/api/stock/:symbol/chart", async (req, res) => {
 export default app;
 
 // Setup local dev and static serving only if not imported (like by Vercel)
-if (process.env.NODE_ENV !== "test" && typeof require !== 'undefined' && require.main === module || process.argv[1].includes('server.ts') || process.argv[1].includes('server.cjs')) {
+if (!process.env.VERCEL && process.env.NODE_ENV !== "test" && (typeof require !== 'undefined' && require.main === module || process.argv[1].includes('server.ts') || process.argv[1].includes('server.cjs'))) {
   (async () => {
     if (process.env.NODE_ENV !== "production") {
+       const { createServer: createViteServer } = await import("vite");
        const vite = await createViteServer({
          server: { middlewareMode: true },
          appType: "spa",
